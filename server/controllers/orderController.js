@@ -25,11 +25,11 @@ exports.createOrder = async (req, res) => {
       withDriver,
       startDate,
       endDate,
-      status: 'pending',
+      status: 'Pending',
     });
 
     // Populate user and car for email
-    await order.populate('user car');
+    await order.populate('car user');
     
     // Send confirmation email
     try {
@@ -38,7 +38,9 @@ exports.createOrder = async (req, res) => {
       console.error('Failed to send confirmation email:', emailError);
     }
 
-    res.status(201).json(order);
+    // Return populated order data
+    const populatedOrder = await Order.findById(order._id).populate('car user');
+    res.status(201).json(populatedOrder);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -95,9 +97,25 @@ exports.getAllOrders = async (req, res) => {
 
 exports.getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate('car');
-    res.json(orders);
+    const orders = await Order.find({ user: req.user._id })
+      .populate('car', 'title name brand model year image images salePrice rentPrice')
+      .sort({ createdAt: -1 });
+    
+    // Filter out orders with missing car data and log for debugging
+    const validOrders = orders.filter(order => {
+      if (!order.car) {
+        console.log(`Order ${order._id} has no car data`);
+        return false;
+      }
+      return true;
+    });
+    
+    // Log summary for debugging
+    console.log(`User ${req.user._id}: Found ${orders.length} total orders, ${validOrders.length} with valid car data`);
+    
+    res.json(validOrders);
   } catch (err) {
+    console.error('Error fetching user orders:', err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -118,23 +136,23 @@ exports.getOrderById = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const order = await Order.findByIdAndUpdate(
-      req.params.id, 
-      { status }, 
-      { new: true }
-    ).populate('car user');
-    
+    const order = await Order.findById(req.params.id).populate('car user');
     if (!order) return res.status(404).json({ message: 'Order not found' });
-    
+    if (status === 'Completed' && !order.contractApproved) {
+      return res.status(400).json({ message: 'Contract must be approved before completing the order.' });
+    }
+    order.status = status;
+    await order.save();
     // Send status update email
     try {
       await sendOrderStatusUpdate(order);
     } catch (emailError) {
       console.error('Failed to send status update email:', emailError);
+      // Don't fail the request if email fails
     }
-    
     res.json(order);
   } catch (err) {
+    console.error('Error updating order status:', err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -151,14 +169,14 @@ exports.bulkUpdateStatus = async (req, res) => {
       { status }
     );
     
-    // Send email notifications for each order
-    for (const order of orders) {
-      try {
-        await sendOrderStatusUpdate(order);
-      } catch (emailError) {
-        console.error(`Failed to send email for order ${order._id}:`, emailError);
-      }
-    }
+    // Send email notifications for each order - disabled to avoid Gmail auth issues
+    // for (const order of orders) {
+    //   try {
+    //     await sendOrderStatusUpdate(order);
+    //   } catch (emailError) {
+    //     console.error(`Failed to send email for order ${order._id}:`, emailError);
+    //   }
+    // }
     
     res.json({ message: `${orders.length} orders updated successfully` });
   } catch (err) {
@@ -277,4 +295,59 @@ async function sendContractEmail(to, pdfBuffer) {
       { filename: 'contract.pdf', content: pdfBuffer },
     ],
   });
-} 
+}
+
+// Admin: Approve contract for an order
+exports.approveContract = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    order.contractApproved = true;
+    await order.save();
+    res.json({ message: 'Contract approved', order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Debug endpoint to check orders with missing car references
+exports.debugOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({}).populate('car');
+    const ordersWithMissingCars = orders.filter(order => !order.car);
+    const ordersWithCars = orders.filter(order => order.car);
+    
+    res.json({
+      totalOrders: orders.length,
+      ordersWithCars: ordersWithCars.length,
+      ordersWithMissingCars: ordersWithMissingCars.length,
+      missingCarOrderIds: ordersWithMissingCars.map(order => order._id),
+      sampleOrderWithCar: ordersWithCars[0] || null
+    });
+  } catch (err) {
+    console.error('Error in debug orders:', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Send order confirmation email (frontend callable)
+exports.sendOrderConfirmation = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    
+    // Fetch the actual order with populated car and user data
+    const order = await Order.findById(orderId)
+      .populate('car', 'title brand model year image images salePrice rentPrice')
+      .populate('user', 'name email');
+    
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    
+    await sendOrderConfirmation(order);
+    res.json({ message: 'Confirmation email sent successfully' });
+  } catch (err) {
+    console.error('Error sending confirmation email:', err);
+    res.status(500).json({ message: 'Failed to send confirmation email' });
+  }
+}; 

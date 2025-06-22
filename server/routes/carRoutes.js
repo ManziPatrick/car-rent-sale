@@ -7,8 +7,8 @@ const upload = multer({ dest: 'uploads/' });
 
 router.get('/', carController.getAll);
 router.get('/:id', carController.getOne);
-router.post('/', protect, isAdmin, upload.single('image'), carController.create);
-router.put('/:id', protect, isAdmin, upload.single('image'), carController.update);
+router.post('/', protect, isAdmin, upload.array('images', 4), carController.create);
+router.put('/:id', protect, isAdmin, upload.array('images', 4), carController.update);
 router.delete('/:id', protect, isAdmin, carController.delete);
 
 module.exports = router; 

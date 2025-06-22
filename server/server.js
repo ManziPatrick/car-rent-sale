@@ -7,6 +7,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const carRoutes = require('./routes/carRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const contractTemplateRoutes = require('./routes/contractTemplateRoutes');
 
 const app = express();
 
@@ -42,3 +43,4 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/contract-templates', contractTemplateRoutes);

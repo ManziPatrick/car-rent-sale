@@ -8,7 +8,8 @@ const carSchema = new mongoose.Schema({
   fuel: { type: String, required: true },
   mileage: { type: Number, required: true },
   transmission: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: String, required: true }, // for backward compatibility
+  images: [{ type: String }], // new field for multiple images
   salePrice: { type: Number, required: true },
   rentPrice: { type: Number, required: true },
   status: { type: String, enum: ['Available', 'Sold', 'Rented'], default: 'Available' },

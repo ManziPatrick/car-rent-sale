@@ -17,17 +17,21 @@ function generateRandomPassword(length = 10) {
 }
 
 exports.register = async (req, res) => {
-  const { email, phone } = req.body;
+  const { name, email, phone } = req.body;
   try {
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ message: 'User already exists' });
     const password = generateRandomPassword();
     const hashed = await bcrypt.hash(password, 10);
-    user = await User.create({ email, phone, password: hashed, isAdmin: true });
+    user = await User.create({ name, email, phone, password: hashed, isAdmin: true });
+    
+    // Send welcome email with generated password
     await sendWelcomeWithPassword(email, password);
+    
     const token = generateToken(user._id);
     res.status(201).json({
       _id: user._id,
+      name: user.name,
       email: user.email,
       phone: user.phone,
       isAdmin: user.isAdmin,

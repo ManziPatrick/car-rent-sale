@@ -5,8 +5,9 @@ const { uploadToCloudinary } = require('../utils/cloudinary');
 
 exports.getAll = async (req, res) => {
   try {
-    const { category, search, status } = req.query;
+    const { category, search, status, limit, page, sort } = req.query;
     let filter = {};
+    
     if (category) filter.category = category;
     if (status) filter.status = status;
     if (search) {
@@ -17,8 +18,38 @@ exports.getAll = async (req, res) => {
         { title: { $regex: search, $options: 'i' } },
       ];
     }
-    const cars = await Car.find(filter).populate('category');
-    res.json(cars);
+
+    // Pagination
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sorting
+    let sortOption = {};
+    if (sort === 'price-asc') sortOption = { salePrice: 1 };
+    else if (sort === 'price-desc') sortOption = { salePrice: -1 };
+    else if (sort === 'newest') sortOption = { createdAt: -1 };
+    else if (sort === 'oldest') sortOption = { createdAt: 1 };
+    else sortOption = { createdAt: -1 }; // Default sort by newest
+
+    const cars = await Car.find(filter)
+      .populate('category')
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNum);
+
+    // Get total count for pagination
+    const total = await Car.countDocuments(filter);
+
+    res.json({
+      cars,
+      pagination: {
+        currentPage: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+        totalItems: total,
+        itemsPerPage: limitNum
+      }
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -36,13 +67,19 @@ exports.getOne = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    let imageUrl = req.body.image;
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.path);
-      imageUrl = result.secure_url;
-      fs.unlinkSync(req.file.path);
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.path);
+        imageUrls.push(result.secure_url);
+        fs.unlinkSync(file.path);
+      }
     }
-    const car = await Car.create({ ...req.body, image: imageUrl });
+    const car = await Car.create({
+      ...req.body,
+      images: imageUrls,
+      image: imageUrls[0] || ''
+    });
     res.status(201).json(car);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -52,10 +89,15 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     let updateData = { ...req.body };
-    if (req.file) {
-      const result = await uploadToCloudinary(req.file.path);
-      updateData.image = result.secure_url;
-      fs.unlinkSync(req.file.path);
+    if (req.files && req.files.length > 0) {
+      let imageUrls = [];
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.path);
+        imageUrls.push(result.secure_url);
+        fs.unlinkSync(file.path);
+      }
+      updateData.images = imageUrls;
+      updateData.image = imageUrls[0] || '';
     }
     const car = await Car.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!car) return res.status(404).json({ message: 'Car not found' });
