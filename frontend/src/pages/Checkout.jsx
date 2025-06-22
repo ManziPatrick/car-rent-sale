@@ -23,17 +23,13 @@ const Checkout = () => {
       const orderRes = await api.post('/orders', {
         car: car._id,
         user: user._id,
-        type,
+        type: type === 'buy' ? 'Buy' : 'Rent',
       });
       
       // Send order confirmation email
       try {
         await api.post('/orders/send-confirmation', {
-          orderId: orderRes.data._id,
-          userEmail: user.email,
-          userName: user.name,
-          carName: car.name,
-          orderType: type,
+          orderId: orderRes.data._id
         });
       } catch (emailError) {
         console.log('Email notification failed:', emailError);
@@ -59,9 +55,9 @@ const Checkout = () => {
         <h1 className="text-3xl font-bold mb-6 text-blue-700 text-center">Checkout</h1>
         {/* Car Summary */}
         <div className="flex gap-4 items-center mb-6">
-          <img src={car.image} alt={car.name} className="w-32 h-20 object-cover rounded" />
+          <img src={car.image} alt={car.title || `${car.brand} ${car.model}`} className="w-32 h-20 object-cover rounded" />
           <div>
-            <div className="font-semibold text-lg">{car.name}</div>
+            <div className="font-semibold text-lg">{car.title || `${car.brand} ${car.model} (${car.year})`}</div>
             <div className="text-blue-600 font-bold">{car.price}</div>
           </div>
         </div>

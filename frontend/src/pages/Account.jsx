@@ -75,7 +75,9 @@ const Account = () => {
               <tbody>
                 {orders.map(order => (
                   <tr key={order._id} className="border-t">
-                    <td className="py-2 px-4">{order.car?.name || 'N/A'}</td>
+                    <td className="py-2 px-4">
+                      {order.car ? `${order.car.brand} ${order.car.model} (${order.car.year})` : 'N/A'}
+                    </td>
                     <td className="py-2 px-4">{order.createdAt?.slice(0, 10)}</td>
                     <td className="py-2 px-4">{order.status}</td>
                   </tr>

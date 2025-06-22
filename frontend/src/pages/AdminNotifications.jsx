@@ -200,7 +200,7 @@ const AdminNotifications = () => {
             </select>
             <textarea name="body" value={form.body} onChange={handleChange} placeholder="Email Body (use {{variable}} for dynamic content)" className="mb-2 w-full px-3 py-2 border rounded h-32" required />
             <div className="text-sm text-gray-500 mb-4">
-              Available variables: {{userName}}, {{orderId}}, {{carName}}, {{status}}, {{date}}
+              Available variables: {'{{userName}}'}, {'{{orderId}}'}, {'{{carName}}'}, {'{{status}}'}, {'{{date}}'}
             </div>
             <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
               {selectedTemplate ? 'Update' : 'Add'} Template

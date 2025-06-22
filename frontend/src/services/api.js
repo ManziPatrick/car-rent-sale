@@ -28,13 +28,6 @@ export const carsAPI = {
   create: (carData) => api.post('/cars', carData),
   update: (id, carData) => api.put(`/cars/${id}`, carData),
   delete: (id) => api.delete(`/cars/${id}`),
-  uploadImage: (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    return api.post('/cars/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
 };
 
 // Categories API
@@ -56,6 +49,7 @@ export const ordersAPI = {
   bulkUpdateStatus: (orderIds, status) => api.put('/orders/bulk-status', { orderIds, status }),
   delete: (id) => api.delete(`/orders/${id}`),
   generateContract: (id, contractText) => api.post(`/orders/${id}/contract`, { contractText }),
+  approveContract: (id) => api.put(`/orders/${id}/approve-contract`),
 };
 
 // Users API (Admin)

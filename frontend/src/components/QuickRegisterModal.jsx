@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 const QuickRegisterModal = ({ open, onClose, action, car }) => {
-  const [form, setForm] = useState({ email: '', phone: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -24,6 +24,7 @@ const QuickRegisterModal = ({ open, onClose, action, car }) => {
     try {
       // Register the user
       const registerRes = await axios.post('http://localhost:5000/api/users/register', {
+        name: form.name,
         email: form.email,
         phone: form.phone
       });
@@ -35,13 +36,13 @@ const QuickRegisterModal = ({ open, onClose, action, car }) => {
         login(form.email, ''); // We don't have the password, but the token is already set
       }
       
-      setSuccess('Account created successfully! Check your email for your password. You can now proceed with your purchase.');
+      setSuccess('Account created successfully! Your login credentials have been sent to your email address.');
       
       // Close modal after 3 seconds
       setTimeout(() => {
         onClose();
         setSuccess('');
-        setForm({ email: '', phone: '' });
+        setForm({ name: '', email: '', phone: '' });
       }, 3000);
       
     } catch (err) {
@@ -71,6 +72,22 @@ const QuickRegisterModal = ({ open, onClose, action, car }) => {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              placeholder="John Doe"
+              value={form.name}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
@@ -132,7 +149,6 @@ const QuickRegisterModal = ({ open, onClose, action, car }) => {
         )}
 
         <div className="mt-4 text-center text-sm text-gray-500">
-          <p>Your password will be sent to your email address.</p>
           <p>You'll be automatically logged in after registration.</p>
         </div>
       </div>

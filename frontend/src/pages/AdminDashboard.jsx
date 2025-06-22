@@ -96,7 +96,9 @@ const AdminDashboard = () => {
                         <div key={order._id} className="flex justify-between items-center py-2 border-b last:border-b-0">
                           <div>
                             <div className="font-semibold">{order.user?.name || 'Unknown'}</div>
-                            <div className="text-sm text-gray-500">{order.car?.name || 'Unknown Car'}</div>
+                            <div className="text-sm text-gray-500">
+                              {order.car?.title || `${order.car?.brand || ''} ${order.car?.model || ''} ${order.car?.year || ''}`.trim() || 'Unknown Car'}
+                            </div>
                           </div>
                           <div className="text-right">
                             <div className="font-semibold">{order.type}</div>

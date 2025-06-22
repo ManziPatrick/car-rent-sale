@@ -6,12 +6,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 import Home from './pages/Home';
 import Shop from './pages/Shop';
+import BuySellPage from './pages/BuySellPage';
 import CarDetails from './pages/CarDetails';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Account from './pages/Account';
 import AdminDashboard from './pages/AdminDashboard';
 import Checkout from './pages/Checkout';
+import ContractPage from './pages/ContractPage';
 import NotFound from './pages/NotFound';
 
 function PrivateRoute({ children }) {
@@ -36,11 +38,13 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/buy-sell" element={<BuySellPage />} />
               <Route path="/car/:id" element={<CarDetails />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/contract" element={<PrivateRoute><ContractPage /></PrivateRoute>} />
               <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

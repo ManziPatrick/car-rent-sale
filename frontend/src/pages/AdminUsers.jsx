@@ -18,10 +18,14 @@ const AdminUsers = () => {
     setLoading(true);
     api.get('/users')
       .then(res => {
-        setUsers(res.data);
+        // Ensure we always have an array
+        setUsers(Array.isArray(res.data) ? res.data : []);
         setError(null);
       })
-      .catch(() => setError('Failed to load users.'))
+      .catch(() => {
+        setError('Failed to load users.');
+        setUsers([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -96,7 +100,7 @@ const AdminUsers = () => {
           </tr>
         </thead>
         <tbody>
-          {users.map(user => (
+          {Array.isArray(users) ? users.map(user => (
             <tr key={user._id} className="border-t">
               <td className="py-2 px-4">{user.name}</td>
               <td className="py-2 px-4">{user.email}</td>
@@ -110,7 +114,11 @@ const AdminUsers = () => {
                 <button onClick={() => openDelete(user._id)} className="text-red-600 hover:underline">Delete</button>
               </td>
             </tr>
-          ))}
+          )) : (
+            <tr>
+              <td colSpan="4" className="py-4 px-4 text-center text-gray-500">No users found</td>
+            </tr>
+          )}
         </tbody>
       </table>
       {/* Edit Modal */}
