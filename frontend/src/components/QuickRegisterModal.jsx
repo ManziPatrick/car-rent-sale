@@ -23,7 +23,7 @@ const QuickRegisterModal = ({ open, onClose, action, car }) => {
     
     try {
       // Register the user
-      const registerRes = await axios.post('http://localhost:5000/api/users/register', {
+      const registerRes = await axios.post('https://car-rent-sale.onrender.com/api/users/register', {
         name: form.name,
         email: form.email,
         phone: form.phone
