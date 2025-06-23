@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
     if (user) return res.status(400).json({ message: 'User already exists' });
     const password = generateRandomPassword();
     const hashed = await bcrypt.hash(password, 10);
-    user = await User.create({ name, email, phone, password: hashed, isAdmin: true });
+    user = await User.create({ name, email, phone, password: hashed, isAdmin: false });
     
     // Send welcome email with generated password
     await sendWelcomeWithPassword(email, password);
