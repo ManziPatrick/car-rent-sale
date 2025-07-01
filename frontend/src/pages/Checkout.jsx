@@ -13,6 +13,8 @@ const Checkout = () => {
 
   const car = state?.car;
   const type = state?.type;
+  const startDate = state?.startDate;
+  const endDate = state?.endDate;
 
   const handleConfirm = async () => {
     if (!car || !user) return;
@@ -20,11 +22,19 @@ const Checkout = () => {
     setError(null);
     try {
       // Create order
-      const orderRes = await api.post('/orders', {
+      const orderData = {
         car: car._id,
         user: user._id,
         type: type === 'buy' ? 'Buy' : 'Rent',
-      });
+      };
+
+      // Add rental dates if it's a rental
+      if (type === 'rent' && startDate && endDate) {
+        orderData.startDate = startDate;
+        orderData.endDate = endDate;
+      }
+
+      const orderRes = await api.post('/orders', orderData);
       
       // Send order confirmation email
       try {
@@ -56,9 +66,20 @@ const Checkout = () => {
         {/* Car Summary */}
         <div className="flex gap-4 items-center mb-6">
           <img src={car.image} alt={car.title || `${car.brand} ${car.model}`} className="w-32 h-20 object-cover rounded" />
-          <div>
+          <div className="flex-1">
             <div className="font-semibold text-lg">{car.title || `${car.brand} ${car.model} (${car.year})`}</div>
-            <div className="text-blue-600 font-bold">{car.price}</div>
+            <div className="text-blue-600 font-bold">
+              {type === 'buy' ? `$${car.salePrice?.toLocaleString()}` : `$${car.rentPrice?.toLocaleString()}/day`}
+            </div>
+            {type === 'rent' && startDate && endDate && (
+              <div className="mt-2 text-sm text-gray-600">
+                <p><strong>Rental Period:</strong> {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}</p>
+                <p><strong>Duration:</strong> {Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} days</p>
+                <p className="text-green-600 font-semibold">
+                  <strong>Total Cost:</strong> ${(Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) * car.rentPrice).toLocaleString()}
+                </p>
+              </div>
+            )}
           </div>
         </div>
         {/* User Info */}

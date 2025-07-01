@@ -12,19 +12,48 @@ exports.createOrder = async (req, res) => {
     const carDoc = await Car.findById(car);
     if (!carDoc) return res.status(404).json({ message: 'Car not found' });
     if (carDoc.status !== 'Available') return res.status(400).json({ message: 'Car not available' });
-    
+
+    // Validate rental dates for rent type
+    if (type === 'Rent') {
+      if (!startDate || !endDate) {
+        return res.status(400).json({ message: 'Start date and end date are required for rentals' });
+      }
+
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const now = new Date();
+
+      // Check if start date is in the future
+      if (start < now) {
+        return res.status(400).json({ message: 'Start date must be in the future' });
+      }
+
+      // Check if end date is after start date
+      if (end <= start) {
+        return res.status(400).json({ message: 'End date must be after start date' });
+      }
+
+      // Check if rental duration is not more than 1 month (30 days)
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays > 30) {
+        return res.status(400).json({ message: 'Rental duration cannot exceed 30 days (1 month)' });
+      }
+    }
+
     // Update car status
     if (type === 'Buy') carDoc.status = 'Sold';
     if (type === 'Rent') carDoc.status = 'Rented';
     await carDoc.save();
-    
+
     const order = await Order.create({
       user: req.user._id,
       car,
       type,
       withDriver,
-      startDate,
-      endDate,
+      startDate: type === 'Rent' ? startDate : undefined,
+      endDate: type === 'Rent' ? endDate : undefined,
       status: 'Pending',
     });
 

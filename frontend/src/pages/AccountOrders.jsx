@@ -98,6 +98,7 @@ const AccountOrders = () => {
               <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
                 <th className="py-4 px-6 text-left font-semibold text-gray-900">Car</th>
                 <th className="py-4 px-6 text-left font-semibold text-gray-900">Type</th>
+                <th className="py-4 px-6 text-left font-semibold text-gray-900">Rental Period</th>
                 <th className="py-4 px-6 text-left font-semibold text-gray-900">Price</th>
                 <th className="py-4 px-6 text-left font-semibold text-gray-900">Status</th>
                 <th className="py-4 px-6 text-left font-semibold text-gray-900">Date</th>
@@ -124,16 +125,35 @@ const AccountOrders = () => {
                   </td>
                   <td className="py-4 px-6">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      order.type === 'Buy' 
-                        ? 'bg-blue-100 text-blue-800' 
+                      order.type === 'Buy'
+                        ? 'bg-blue-100 text-blue-800'
                         : 'bg-green-100 text-green-800'
                     }`}>
                       {order.type === 'Buy' ? 'Buy' : 'Rent'}
                     </span>
                   </td>
                   <td className="py-4 px-6">
+                    {order.type === 'Rent' && order.startDate && order.endDate ? (
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-900">
+                          {new Date(order.startDate).toLocaleDateString()} - {new Date(order.endDate).toLocaleDateString()}
+                        </div>
+                        <div className="text-gray-500">
+                          {Math.ceil((new Date(order.endDate) - new Date(order.startDate)) / (1000 * 60 * 60 * 24))} days
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-sm">N/A</span>
+                    )}
+                  </td>
+                  <td className="py-4 px-6">
                     <div className="font-semibold text-blue-600">
-                      ${order.type === 'Buy' ? (order.car?.salePrice || 0).toLocaleString() : (order.car?.rentPrice || 0).toLocaleString()}
+                      ${order.type === 'Buy'
+                        ? (order.car?.salePrice || 0).toLocaleString()
+                        : order.type === 'Rent' && order.startDate && order.endDate
+                        ? (Math.ceil((new Date(order.endDate) - new Date(order.startDate)) / (1000 * 60 * 60 * 24)) * (order.car?.rentPrice || 0)).toLocaleString()
+                        : (order.car?.rentPrice || 0).toLocaleString()}
+                      {order.type === 'Rent' && !order.startDate && <span className="text-sm">/day</span>}
                     </div>
                   </td>
                   <td className="py-4 px-6">

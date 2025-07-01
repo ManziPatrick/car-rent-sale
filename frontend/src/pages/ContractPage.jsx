@@ -7,6 +7,9 @@ const ContractPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [accepted, setAccepted] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [dateError, setDateError] = useState('');
 
   const car = state?.car;
   const type = state?.type; // 'buy' or 'rent'
@@ -15,19 +18,76 @@ const ContractPage = () => {
     return <div className="text-center py-12 text-red-500">Missing car or user information.</div>;
   }
 
+  // Get today's date in YYYY-MM-DD format for min date
+  const today = new Date().toISOString().split('T')[0];
+
+  // Get max date (30 days from today) for rental limit
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 30);
+  const maxDateString = maxDate.toISOString().split('T')[0];
+
+  const validateDates = (start, end) => {
+    if (!start || !end) return '';
+
+    const startDateObj = new Date(start);
+    const endDateObj = new Date(end);
+    const diffTime = Math.abs(endDateObj - startDateObj);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (endDateObj <= startDateObj) {
+      return 'End date must be after start date';
+    }
+
+    if (diffDays > 30) {
+      return 'Rental duration cannot exceed 30 days (1 month)';
+    }
+
+    return '';
+  };
+
+  const handleStartDateChange = (e) => {
+    const newStartDate = e.target.value;
+    setStartDate(newStartDate);
+    const error = validateDates(newStartDate, endDate);
+    setDateError(error);
+  };
+
+  const handleEndDateChange = (e) => {
+    const newEndDate = e.target.value;
+    setEndDate(newEndDate);
+    const error = validateDates(startDate, newEndDate);
+    setDateError(error);
+  };
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleAccept = () => {
+    if (type === 'rent') {
+      // Validate rental dates
+      if (!startDate || !endDate) {
+        setDateError('Please select both start and end dates for rental');
+        return;
+      }
+
+      const error = validateDates(startDate, endDate);
+      if (error) {
+        setDateError(error);
+        return;
+      }
+    }
+
     if (accepted) {
-      // Navigate to checkout with contract acceptance
-      navigate('/checkout', { 
-        state: { 
-          car, 
-          type, 
-          contractAccepted: true 
-        } 
+      // Navigate to checkout with contract acceptance and rental dates
+      navigate('/checkout', {
+        state: {
+          car,
+          type,
+          contractAccepted: true,
+          startDate: type === 'rent' ? startDate : undefined,
+          endDate: type === 'rent' ? endDate : undefined
+        }
       });
     }
   };
@@ -61,10 +121,64 @@ const ContractPage = () => {
                 <h3 className="font-semibold text-gray-700 mb-2">Vehicle Information</h3>
                 <p><strong>Vehicle:</strong> {car.brand} {car.model} {car.year}</p>
                 <p><strong>Type:</strong> {type === 'buy' ? 'Purchase' : 'Rental'}</p>
-                <p><strong>Price:</strong> ${type === 'buy' ? car.salePrice?.toLocaleString() : car.rentPrice?.toLocaleString()}</p>
+                <p><strong>Price:</strong> ${type === 'buy' ? car.salePrice?.toLocaleString() : car.rentPrice?.toLocaleString()}{type === 'rent' ? '/day' : ''}</p>
               </div>
             </div>
           </div>
+
+          {/* Rental Dates Section - Only for rentals */}
+          {type === 'rent' && (
+            <div className="border-b pb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Rental Period</h2>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="font-semibold text-blue-800 mb-4">📅 Select Your Rental Dates</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+                      Pick-up Date
+                    </label>
+                    <input
+                      type="date"
+                      id="startDate"
+                      value={startDate}
+                      onChange={handleStartDateChange}
+                      min={today}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+                      Return Date
+                    </label>
+                    <input
+                      type="date"
+                      id="endDate"
+                      value={endDate}
+                      onChange={handleEndDateChange}
+                      min={startDate || today}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                {dateError && (
+                  <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {dateError}
+                  </div>
+                )}
+                {startDate && endDate && !dateError && (
+                  <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                    <p><strong>Rental Duration:</strong> {Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))} days</p>
+                    <p><strong>Total Cost:</strong> ${(Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) * car.rentPrice).toLocaleString()}</p>
+                  </div>
+                )}
+                <div className="mt-4 text-sm text-blue-700">
+                  <p><strong>Important:</strong> Maximum rental period is 30 days (1 month)</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Terms */}
           <div className="border-b pb-6">

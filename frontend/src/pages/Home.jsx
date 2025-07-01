@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import CarCard from '../components/CarCard';
 import { carsAPI, categoriesAPI } from '../services/api';
 import heroCar1 from '../assets/pexels-hyundaimotorgroup-15116059-removebg-preview.png';
-import heroCar2 from '../assets/pexels-michael-bevan-872032742-19798457-removebg-preview.png';
-import heroCar3 from '../assets/pexels-mohit-hambiria-92377455-31340476-removebg-preview.jpg';
+import heroCar2 from '../assets/lava4.png';
+import heroCar3 from '../assets/suzuki3.png';
+import heroCar4 from '../assets/lava2.jpg';
+// import heroCar5 from '../assets/suzuki.png';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -17,7 +19,7 @@ const Home = () => {
   const [tab, setTab] = useState('Featured');
   const [currentHeroCar, setCurrentHeroCar] = useState(0);
   const controls = useAnimation();
-  const heroCars = [heroCar1, heroCar2, heroCar3];
+  const heroCars = [heroCar1, heroCar2, heroCar3,heroCar4];
   const heroIntervalRef = useRef(null);
 
   // Animation variants
@@ -224,29 +226,60 @@ const Home = () => {
           </motion.div>
         </div>
         
-        <div className="flex-1 flex justify-end relative h-64 md:h-96">
+        <div className="flex-1 flex justify-end relative h-64 md:h-96 overflow-hidden">
           <AnimatePresence mode="wait">
-            <motion.img
+            <motion.div
               key={currentHeroCar}
-              src={heroCars[currentHeroCar]}
-              alt="Hero Car"
-              className="w-full max-w-lg object-contain absolute"
+              className="relative w-full max-w-lg"
               initial={{ x: 100, opacity: 0 }}
-              animate={{ 
-                x: 0, 
+              animate={{
+                x: 0,
                 opacity: 1,
                 transition: { duration: 0.8, ease: "easeOut" }
               }}
-              exit={{ 
-                x: -100, 
+              exit={{
+                x: -100,
                 opacity: 0,
                 transition: { duration: 0.5, ease: "easeIn" }
               }}
-              whileHover={{ 
-                scale: 1.05,
-                transition: { duration: 0.3 }
-              }}
-            />
+            >
+              <motion.img
+                src={heroCars[currentHeroCar]}
+                alt="Hero Car"
+                className="w-full object-contain absolute"
+                animate={{
+                  x: [0, 15, -15, 0],
+                  rotateY: [0, 3, -3, 0],
+                  scale: [1, 1.02, 0.98, 1]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  transition: { duration: 0.3 }
+                }}
+              />
+
+              {/* Racing speed lines for hero car */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                animate={{
+                  opacity: [0, 0.4, 0]
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent transform -translate-y-1/2 opacity-60"></div>
+                <div className="absolute top-1/3 left-0 w-4/5 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent transform -translate-y-1/2 opacity-40"></div>
+                <div className="absolute top-2/3 left-0 w-3/5 h-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent transform -translate-y-1/2 opacity-30"></div>
+              </motion.div>
+            </motion.div>
           </AnimatePresence>
           
           {/* Floating elements */}
@@ -319,13 +352,14 @@ const Home = () => {
       </motion.section>
 
       {/* Car Tabs */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true, amount: 0.2 }}
-        className="max-w-7xl mx-auto px-8 py-12"
+        className="max-w-7xl mx-auto px-8 py-12 relative"
       >
+
         <div className="flex gap-2 mb-6">
           {['Featured', 'Popular', 'New added'].map((t, i) => (
             <motion.button
@@ -343,7 +377,7 @@ const Home = () => {
           ))}
         </div>
         
-        <motion.div 
+        <motion.div
           layout
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6"
         >
@@ -353,7 +387,7 @@ const Home = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ 
+              whileHover={{
                 y: -5,
                 transition: { duration: 0.2 }
               }}
@@ -364,7 +398,7 @@ const Home = () => {
         </motion.div>
         
         {getFilteredCars().length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-center py-8 text-gray-500"

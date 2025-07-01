@@ -53,11 +53,11 @@ const CarDetails = () => {
       return;
     }
     // Navigate to contract page first
-    navigate('/contract', { 
-      state: { 
-        car, 
-        type: action 
-      } 
+    navigate('/contract', {
+      state: {
+        car,
+        type: action
+      }
     });
   };
 
